@@ -35,8 +35,9 @@ CREATE TABLE change_log (
 );
 
 -- ────────────────────────────────────────────────────────────────
---  Row Level Security – öffentlich lese- und schreibbar
---  (kein Login für Eltern; Schutz erfolgt über Admin-Passwort im Frontend)
+--  Row Level Security
+--  Eltern (anon): lesen und sich eintragen. Dienste anlegen/löschen und
+--  Helfer entfernen darf nur ein angemeldeter Admin (Supabase Auth).
 -- ────────────────────────────────────────────────────────────────
 ALTER TABLE aufgaben   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE helfer     ENABLE ROW LEVEL SECURITY;
@@ -46,12 +47,12 @@ CREATE POLICY "public read aufgaben"    ON aufgaben    FOR SELECT USING (true);
 CREATE POLICY "public read helfer"      ON helfer      FOR SELECT USING (true);
 CREATE POLICY "public read change_log"  ON change_log  FOR SELECT USING (true);
 
-CREATE POLICY "public insert aufgaben"    ON aufgaben    FOR INSERT WITH CHECK (true);
 CREATE POLICY "public insert helfer"      ON helfer      FOR INSERT WITH CHECK (true);
 CREATE POLICY "public insert change_log"  ON change_log  FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "public delete aufgaben"    ON aufgaben    FOR DELETE USING (true);
-CREATE POLICY "public delete helfer"      ON helfer      FOR DELETE USING (true);
+CREATE POLICY "admin insert aufgaben" ON aufgaben FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "admin delete aufgaben" ON aufgaben FOR DELETE TO authenticated USING (true);
+CREATE POLICY "admin delete helfer"   ON helfer   FOR DELETE TO authenticated USING (true);
 
 -- ────────────────────────────────────────────────────────────────
 --  Vorbelegte Dienste

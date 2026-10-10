@@ -349,9 +349,11 @@
 <div class="overlay" id="modal-admin">
     <div class="modal">
         <h3>🔐 Admin-Zugang</h3>
-        <input type="password" id="admin-pw" placeholder="Passwort eingeben…"
+        <input type="text" id="admin-email" placeholder="E-Mail" autocomplete="username"
                onkeydown="if(event.key==='Enter')confirmAdmin()">
-        <p class="modal-err" id="admin-err">Falsches Passwort</p>
+        <input type="password" id="admin-pw" placeholder="Passwort" autocomplete="current-password"
+               onkeydown="if(event.key==='Enter')confirmAdmin()">
+        <p class="modal-err" id="admin-err">Anmeldung fehlgeschlagen</p>
         <div class="modal-btns">
             <button class="btn-cancel" onclick="closeModal('modal-admin')">Abbrechen</button>
             <button class="btn-ok"     onclick="confirmAdmin()">Einloggen</button>
@@ -383,7 +385,6 @@
 // ────────────────────────────────────────────────────────────────
 const SUPABASE_URL   = 'https://mxpjzurndydpfpvjewno.supabase.co';     // ← Project URL eintragen
 const SUPABASE_KEY   = 'sb_publishable_kK1gMeH4H_ds4kgTxhHocg_fevJmMYv';           // ← anon/publishable Key eintragen
-const ADMIN_PASSWORD = 'StMartin2026!';           // bitte ändern!
 
 // ────────────────────────────────────────────────────────────────
 //  SUPABASE INIT
@@ -418,35 +419,37 @@ function closeModal(id) { document.getElementById(id).classList.remove('show'); 
 // ────────────────────────────────────────────────────────────────
 //  ADMIN
 // ────────────────────────────────────────────────────────────────
+function setAdmin(on) {
+    isAdmin = on;
+    document.body.classList.toggle('admin-mode', on);
+    const st = document.getElementById('admin-status'), btn = document.getElementById('admin-btn');
+    st.textContent = on ? '⚠️ Admin aktiv' : 'Ansichtsmodus';
+    st.classList.toggle('on', on);
+    btn.textContent = on ? '🔓 Abmelden' : '🔒 Admin';
+    btn.classList.toggle('off', on);
+}
+
 function toggleAdmin() {
     if (isAdmin) {
-        isAdmin = false;
-        document.body.classList.remove('admin-mode');
-        document.getElementById('admin-status').textContent = 'Ansichtsmodus';
-        document.getElementById('admin-status').classList.remove('on');
-        document.getElementById('admin-btn').textContent = '🔒 Admin';
-        document.getElementById('admin-btn').classList.remove('off');
+        db.auth.signOut();
+        setAdmin(false);
     } else {
         document.getElementById('admin-pw').value = '';
         document.getElementById('admin-err').style.display = 'none';
         openModal('modal-admin');
-        setTimeout(() => document.getElementById('admin-pw').focus(), 150);
+        setTimeout(() => document.getElementById('admin-email').focus(), 150);
     }
 }
 
-function confirmAdmin() {
-    if (document.getElementById('admin-pw').value === ADMIN_PASSWORD) {
-        isAdmin = true;
-        document.body.classList.add('admin-mode');
-        document.getElementById('admin-status').textContent = '⚠️ Admin aktiv';
-        document.getElementById('admin-status').classList.add('on');
-        document.getElementById('admin-btn').textContent = '🔓 Abmelden';
-        document.getElementById('admin-btn').classList.add('off');
-        closeModal('modal-admin');
-        showToast('Admin-Modus aktiviert');
-    } else {
-        document.getElementById('admin-err').style.display = 'block';
-    }
+async function confirmAdmin() {
+    const { error } = await db.auth.signInWithPassword({
+        email: document.getElementById('admin-email').value.trim(),
+        password: document.getElementById('admin-pw').value
+    });
+    if (error) { document.getElementById('admin-err').style.display = 'block'; return; }
+    closeModal('modal-admin');
+    setAdmin(true);
+    showToast('Admin-Modus aktiviert');
 }
 
 // ────────────────────────────────────────────────────────────────
@@ -610,8 +613,7 @@ async function confirmHelfen() {
 
 async function deleteHelfer(helferId, name) {
     if (!isAdmin) return;
-    const by = prompt('Wer löscht diesen Eintrag?');
-    if (!by) return;
+    const by = 'Admin';
 
     await db.from('change_log').insert({
         tabelle: 'helfer', zeile_id: helferId,
@@ -656,7 +658,10 @@ async function deleteAufgabe(id, titel) {
 // ────────────────────────────────────────────────────────────────
 //  INIT
 // ────────────────────────────────────────────────────────────────
-if (CONFIGURED) loadHelfer();
+if (CONFIGURED) {
+    db.auth.getSession().then(({ data }) => { if (data.session) setAdmin(true); });
+    loadHelfer();
+}
 else document.getElementById('helfer-entries').innerHTML =
     '<div class="empty-state"><span class="icon">⚙️</span>Supabase ist noch nicht konfiguriert (siehe SETUP.md).</div>';
 </script>

@@ -5,9 +5,11 @@
    ```js
    const SUPABASE_URL   = '…';   // Project URL
    const SUPABASE_KEY   = '…';   // anon / publishable key
-   const ADMIN_PASSWORD = 'StMartin2026!';   // bitte ändern
    ```
-3. **Veröffentlichen**: GitHub → Settings → Pages → Deploy from branch `main` / `(root)`.
+3. **Admin-Konto** (Passwort liegt in Supabase, nicht im Repo): Authentication → Users → Add user
+   (E-Mail + Passwort, „Auto Confirm User" anhaken). Danach unter Authentication → Sign In / Providers
+   „Allow new users to sign up" **ausschalten**.
+4. **Veröffentlichen**: GitHub → Settings → Pages → Deploy from branch `main` / `(root)`.
 
 ## Dienste anpassen
 - Im Admin-Modus (Button unten rechts) können Dienste angelegt/gelöscht und Helfer entfernt werden.
