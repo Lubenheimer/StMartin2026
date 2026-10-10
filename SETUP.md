@@ -6,6 +6,7 @@
    const SUPABASE_URL   = '…';   // Project URL
    const SUPABASE_KEY   = '…';   // anon / publishable key
    ```
+   (Bestehende Tabellen: stattdessen `migrate.sql` ausführen.)
 3. **Admin-Konto** (Passwort liegt in Supabase, nicht im Repo): Authentication → Users → Add user
    (E-Mail + Passwort, „Auto Confirm User" anhaken). Danach unter Authentication → Sign In / Providers
    „Allow new users to sign up" **ausschalten**.
