@@ -39,7 +39,7 @@
         header p  { font-size: 0.82rem; opacity: 0.75; margin-top: 0.2rem; }
 
         /* ── CONTENT ── */
-        .tab-content { padding: 1rem; max-width: 600px; margin: 0 auto; }
+        .tab-content { padding: 1rem; max-width: 1080px; margin: 0 auto; }
 
         .info-box {
             background: var(--amber-light);
@@ -98,7 +98,7 @@
         .btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
         /* ── LOG ── */
-        .log-section { max-width: 600px; margin: 0.75rem auto; padding: 0 1rem 5rem; }
+        .log-section { max-width: 1080px; margin: 0.75rem auto; padding: 0 1rem 5rem; }
         details.log-wrap > summary {
             cursor: pointer; padding: 0.65rem 1rem;
             background: #fff; border: 1px solid var(--border); border-radius: 8px;
@@ -132,11 +132,20 @@
         .btn-sm.off { background: var(--red); }
 
         /* ── HELFERLISTE ── */
+        #helfer-entries {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 0.85rem;
+            align-items: stretch;
+        }
+        #helfer-entries > .loading,
+        #helfer-entries > .empty-state { grid-column: 1 / -1; }
         .helfer-card {
+            display: flex; flex-direction: column;
             background: #fff;
             border: 1px solid var(--border);
             border-radius: 12px;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0;
             overflow: hidden;
         }
         .helfer-card-header {
@@ -186,6 +195,7 @@
         }
         .admin-mode .helfer-chip .chip-del { display: inline; }
         .helfer-card-footer {
+            margin-top: auto;
             border-top: 1px solid var(--border);
             padding: 0.6rem 0.9rem;
             display: flex; gap: 0.5rem; align-items: center;
@@ -214,6 +224,7 @@
 
         /* Admin: Aufgabe hinzufügen */
         .admin-add-form {
+            max-width: 600px;
             display: none;
             background: #fff6dc;
             border: 1.5px dashed var(--gold);
