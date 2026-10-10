@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏮 St. Martin 2026</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --amber:       #5b4ba8;
+            --amber-dark:  #2f2763;
+            --amber-light: #ebe8f7;
+            --gold:        #f2b632;
+            --bg:          #f8f7fb;
+            --text:        #26223a;
+            --gray:        #6f6a85;
+            --border:      #dcd8ec;
+            --red:         #c0392b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        /* ── HEADER ── */
+        header {
+            background: var(--amber-dark);
+            color: white;
+            padding: 1.25rem 1rem 0.75rem;
+            text-align: center;
+        }
+        header h1 { font-size: 1.5rem; font-weight: 700; }
+        header p  { font-size: 0.82rem; opacity: 0.75; margin-top: 0.2rem; }
+
+        /* ── CONTENT ── */
+        .tab-content { padding: 1rem; max-width: 600px; margin: 0 auto; }
+
+        .info-box {
+            background: var(--amber-light);
+            border-left: 4px solid var(--amber);
+            padding: 0.7rem 0.9rem;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 1.25rem;
+            font-size: 0.85rem;
+            color: var(--amber-dark);
+        }
+
+        /* ── SECTION TITLES ── */
+        .section-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--amber-dark);
+            margin-bottom: 0.65rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .entries-section { margin-bottom: 1.75rem; }
+
+        /* ── EMPTY STATE ── */
+        .empty-state { text-align: center; padding: 1.5rem; color: var(--gray); font-size: 0.82rem; }
+        .empty-state .icon { font-size: 2rem; display: block; margin-bottom: 0.4rem; }
+
+        /* ── FORM ── */
+        .form-section {
+            background: #fff; border: 1px solid var(--border);
+            border-radius: 12px; padding: 1rem;
+        }
+        .form-group { margin-bottom: 0.9rem; }
+        .form-group label {
+            display: block; font-size: 0.82rem; font-weight: 600;
+            color: var(--amber-dark); margin-bottom: 0.35rem;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%; padding: 0.6rem 0.75rem;
+            border: 1.5px solid var(--border); border-radius: 8px;
+            font-size: 0.95rem; font-family: inherit; color: var(--text);
+            background: var(--bg); transition: border-color 0.2s;
+        }
+        .form-group input:focus,
+        .form-group select:focus { outline: none; border-color: var(--amber); }
+
+        .btn {
+            width: 100%; padding: 0.8rem;
+            background: var(--amber); color: #fff;
+            border: none; border-radius: 8px;
+            font-size: 0.95rem; font-weight: 700; cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn:hover    { background: var(--amber-dark); }
+        .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+        /* ── LOG ── */
+        .log-section { max-width: 600px; margin: 0.75rem auto; padding: 0 1rem 5rem; }
+        details.log-wrap > summary {
+            cursor: pointer; padding: 0.65rem 1rem;
+            background: #fff; border: 1px solid var(--border); border-radius: 8px;
+            font-size: 0.82rem; font-weight: 600; color: var(--gray);
+            list-style: none; user-select: none;
+        }
+        details.log-wrap > summary::-webkit-details-marker { display: none; }
+        .log-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; margin-top: 0.5rem; }
+        .log-table th {
+            text-align: left; padding: 0.35rem 0.5rem;
+            background: var(--amber-light); color: var(--amber-dark); font-weight: 700;
+        }
+        .log-table td { padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+        .log-table tr:nth-child(even) td { background: var(--bg); }
+
+        /* ── ADMIN BAR ── */
+        .admin-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: #fff; border-top: 1px solid var(--border);
+            padding: 0.6rem 1rem;
+            display: flex; align-items: center; justify-content: space-between;
+            z-index: 100;
+        }
+        .admin-status { font-size: 0.78rem; color: var(--gray); }
+        .admin-status.on { color: var(--red); font-weight: 700; }
+        .btn-sm {
+            padding: 0.38rem 0.9rem; font-size: 0.78rem;
+            background: var(--amber); color: #fff;
+            border: none; border-radius: 6px; cursor: pointer; font-weight: 600;
+        }
+        .btn-sm.off { background: var(--red); }
+
+        /* ── HELFERLISTE ── */
+        .helfer-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            overflow: hidden;
+        }
+        .helfer-card-header {
+            padding: 0.75rem 0.9rem 0.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+        .helfer-card-info { flex: 1; min-width: 0; }
+        .helfer-card-title {
+            font-weight: 700; font-size: 0.95rem; color: var(--amber-dark);
+        }
+        .helfer-card-desc {
+            font-size: 0.8rem; color: var(--gray); margin-top: 0.1rem;
+        }
+        .helfer-progress {
+            padding: 0 0.9rem 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.78rem;
+            color: var(--gray);
+        }
+        .progress-bar-wrap {
+            flex: 1; height: 6px; background: var(--border);
+            border-radius: 3px; overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%; background: var(--amber);
+            border-radius: 3px; transition: width 0.3s;
+        }
+        .progress-bar-fill.full { background: var(--gold); }
+        .helfer-names {
+            padding: 0 0.9rem 0.6rem;
+            display: flex; flex-wrap: wrap; gap: 0.3rem;
+        }
+        .helfer-chip {
+            background: var(--amber-light); color: var(--amber-dark);
+            padding: 0.2rem 0.6rem; border-radius: 20px;
+            font-size: 0.75rem; font-weight: 600;
+            display: flex; align-items: center; gap: 0.3rem;
+        }
+        .helfer-chip .chip-del {
+            background: none; border: none; cursor: pointer;
+            color: var(--red); font-size: 0.75rem; padding: 0;
+            display: none;
+        }
+        .admin-mode .helfer-chip .chip-del { display: inline; }
+        .helfer-card-footer {
+            border-top: 1px solid var(--border);
+            padding: 0.6rem 0.9rem;
+            display: flex; gap: 0.5rem; align-items: center;
+        }
+        .btn-helfen {
+            flex: 1; padding: 0.55rem;
+            background: var(--amber); color: #fff;
+            border: none; border-radius: 8px;
+            font-size: 0.88rem; font-weight: 700; cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-helfen:hover    { background: var(--amber-dark); }
+        .btn-helfen:disabled { background: #ccc; cursor: not-allowed; }
+        .badge-vergeben {
+            display: inline-block; margin-left: 0.35rem; vertical-align: middle;
+            background: #e3f4e6; color: #1e6b32; font-size: 0.68rem; font-weight: 700;
+            padding: 0.1rem 0.5rem; border-radius: 20px;
+        }
+        .btn-aufgabe-del {
+            background: none; border: 1.5px solid var(--red);
+            color: var(--red); border-radius: 8px;
+            padding: 0.55rem 0.75rem; font-size: 0.82rem;
+            cursor: pointer; display: none;
+        }
+        .admin-mode .btn-aufgabe-del { display: block; }
+
+        /* Admin: Aufgabe hinzufügen */
+        .admin-add-form {
+            display: none;
+            background: #fff6dc;
+            border: 1.5px dashed var(--gold);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .admin-mode .admin-add-form { display: block; }
+        .admin-add-form .section-title { color: #7d5a00; border-color: #f0d080; }
+        .admin-add-form .form-group input,
+        .admin-add-form .form-group select {
+            border-color: #f0d080;
+        }
+        .btn-amber {
+            width: 100%; padding: 0.7rem;
+            background: var(--gold); color: #1a1a1a;
+            border: none; border-radius: 8px;
+            font-size: 0.92rem; font-weight: 700; cursor: pointer;
+        }
+
+        /* ── LOADING ── */
+        .loading { text-align: center; padding: 1.5rem; color: var(--gray); font-size: 0.82rem; }
+
+        /* ── TOAST ── */
+        .toast {
+            position: fixed; top: 1rem; left: 50%; transform: translateX(-50%);
+            background: var(--amber-dark); color: #fff;
+            padding: 0.65rem 1.4rem; border-radius: 8px;
+            font-size: 0.88rem; z-index: 1000;
+            opacity: 0; transition: opacity 0.3s; pointer-events: none;
+            white-space: nowrap;
+        }
+        .toast.show  { opacity: 1; }
+        .toast.error { background: var(--red); }
+
+        /* ── MODAL ── */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+            display: none; align-items: center; justify-content: center;
+            z-index: 200; padding: 1rem;
+        }
+        .overlay.show { display: flex; }
+        .modal {
+            background: #fff; border-radius: 14px;
+            padding: 1.4rem; width: 100%; max-width: 360px;
+        }
+        .modal h3 { margin-bottom: 0.9rem; color: var(--amber-dark); font-size: 1.05rem; }
+        .modal p  { font-size: 0.85rem; color: var(--gray); margin-bottom: 0.75rem; }
+        .modal input {
+            width: 100%; padding: 0.6rem 0.75rem;
+            border: 1.5px solid var(--border); border-radius: 8px;
+            font-size: 0.95rem; margin-bottom: 0.75rem;
+        }
+        .modal input:focus { outline: none; border-color: var(--amber); }
+        .modal-err { color: var(--red); font-size: 0.78rem; margin: -0.5rem 0 0.5rem; display: none; }
+        .modal-btns { display: flex; gap: 0.5rem; }
+        .btn-cancel {
+            flex: 1; padding: 0.7rem; background: var(--bg);
+            border: 1.5px solid var(--border); border-radius: 8px;
+            cursor: pointer; font-size: 0.9rem;
+        }
+        .btn-ok {
+            flex: 1; padding: 0.7rem; background: var(--amber); color: #fff;
+            border: none; border-radius: 8px; cursor: pointer;
+            font-size: 0.9rem; font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════ HEADER -->
+<header>
+    <h1>🏮 St. Martin 2026</h1>
+    <p>Helferliste</p>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════ TAB: HELFER -->
+<section id="tab-helfer" class="tab-content">
+    <div class="info-box">
+        Hier findest du alle Dienste rund um St. Martin. Trag dich ein, wo du helfen kannst – jede helfende Hand zählt!
+    </div>
+
+    <!-- NUR IM ADMIN-MODUS: Neue Aufgabe anlegen -->
+    <div class="admin-add-form">
+        <div class="section-title">⚙️ Neue Aufgabe anlegen</div>
+        <form id="aufgabe-form" onsubmit="submitAufgabe(event)">
+            <div class="form-group">
+                <label for="aufgabe-titel">Aufgabe *</label>
+                <input type="text" id="aufgabe-titel" placeholder="z.B. Laternen aufhängen" required>
+            </div>
+            <div class="form-group">
+                <label for="aufgabe-desc">Beschreibung (optional)</label>
+                <input type="text" id="aufgabe-desc" placeholder="z.B. Samstag 14:00 Uhr vor Ort">
+            </div>
+            <div class="form-group">
+                <label for="aufgabe-max">Max. Helfer *</label>
+                <select id="aufgabe-max" required>
+                    <option value="1">1 Person</option>
+                    <option value="2">2 Personen</option>
+                    <option value="3" selected>3 Personen</option>
+                    <option value="4">4 Personen</option>
+                    <option value="5">5 Personen</option>
+                    <option value="10">10 Personen</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-amber">+ Aufgabe hinzufügen</button>
+        </form>
+    </div>
+
+    <div class="entries-section">
+        <div class="section-title">Dienste</div>
+        <div id="helfer-entries"><div class="loading">Lädt…</div></div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ LOG -->
+<div class="log-section">
+    <details class="log-wrap" id="log-wrap" ontoggle="onLogToggle(this)">
+        <summary>📋 Änderungsprotokoll anzeigen</summary>
+        <div id="log-content" style="overflow-x:auto;margin-top:0.5rem">
+            <div class="loading">Wird geladen…</div>
+        </div>
+    </details>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ ADMIN BAR -->
+<div class="admin-bar">
+    <span class="admin-status" id="admin-status">Ansichtsmodus</span>
+    <button class="btn-sm" id="admin-btn" onclick="toggleAdmin()">🔒 Admin</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ MODAL: ADMIN LOGIN -->
+<div class="overlay" id="modal-admin">
+    <div class="modal">
+        <h3>🔐 Admin-Zugang</h3>
+        <input type="password" id="admin-pw" placeholder="Passwort eingeben…"
+               onkeydown="if(event.key==='Enter')confirmAdmin()">
+        <p class="modal-err" id="admin-err">Falsches Passwort</p>
+        <div class="modal-btns">
+            <button class="btn-cancel" onclick="closeModal('modal-admin')">Abbrechen</button>
+            <button class="btn-ok"     onclick="confirmAdmin()">Einloggen</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ MODAL: HELFER ANMELDEN -->
+<div class="overlay" id="modal-helfen">
+    <div class="modal">
+        <h3 id="helfen-modal-title">Ich helfe mit!</h3>
+        <p id="helfen-modal-desc" style="margin-bottom:0.75rem"></p>
+        <input type="text" id="helfen-name" placeholder="Dein Name"
+               onkeydown="if(event.key==='Enter')confirmHelfen()">
+        <div class="modal-btns">
+            <button class="btn-cancel" onclick="closeModal('modal-helfen')">Abbrechen</button>
+            <button class="btn-ok" onclick="confirmHelfen()">Eintragen</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════════════════════ SCRIPT -->
+<script>
+// ────────────────────────────────────────────────────────────────
+//  KONFIGURATION  ← hier deine Werte eintragen
+// ────────────────────────────────────────────────────────────────
+const SUPABASE_URL   = 'DEINE_SUPABASE_URL';     // ← Project URL eintragen
+const SUPABASE_KEY   = 'DEIN_ANON_KEY';           // ← anon/publishable Key eintragen
+const ADMIN_PASSWORD = 'StMartin2026!';           // bitte ändern!
+
+// ────────────────────────────────────────────────────────────────
+//  SUPABASE INIT
+// ────────────────────────────────────────────────────────────────
+const CONFIGURED = !SUPABASE_URL.startsWith('DEINE_');
+const db = CONFIGURED ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+// ────────────────────────────────────────────────────────────────
+//  STATE
+// ────────────────────────────────────────────────────────────────
+let isAdmin      = false;
+let pendingHelfen = null;  // { aufgabeId, titel }
+let logDirty     = true;
+
+// ────────────────────────────────────────────────────────────────
+//  TOAST
+// ────────────────────────────────────────────────────────────────
+function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (isError ? ' error' : '');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ────────────────────────────────────────────────────────────────
+//  MODAL HELPERS
+// ────────────────────────────────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+// ────────────────────────────────────────────────────────────────
+//  ADMIN
+// ────────────────────────────────────────────────────────────────
+function toggleAdmin() {
+    if (isAdmin) {
+        isAdmin = false;
+        document.body.classList.remove('admin-mode');
+        document.getElementById('admin-status').textContent = 'Ansichtsmodus';
+        document.getElementById('admin-status').classList.remove('on');
+        document.getElementById('admin-btn').textContent = '🔒 Admin';
+        document.getElementById('admin-btn').classList.remove('off');
+    } else {
+        document.getElementById('admin-pw').value = '';
+        document.getElementById('admin-err').style.display = 'none';
+        openModal('modal-admin');
+        setTimeout(() => document.getElementById('admin-pw').focus(), 150);
+    }
+}
+
+function confirmAdmin() {
+    if (document.getElementById('admin-pw').value === ADMIN_PASSWORD) {
+        isAdmin = true;
+        document.body.classList.add('admin-mode');
+        document.getElementById('admin-status').textContent = '⚠️ Admin aktiv';
+        document.getElementById('admin-status').classList.add('on');
+        document.getElementById('admin-btn').textContent = '🔓 Abmelden';
+        document.getElementById('admin-btn').classList.add('off');
+        closeModal('modal-admin');
+        showToast('Admin-Modus aktiviert');
+    } else {
+        document.getElementById('admin-err').style.display = 'block';
+    }
+}
+
+// ────────────────────────────────────────────────────────────────
+//  LOG
+// ────────────────────────────────────────────────────────────────
+const TABLE_LABELS = {
+    aufgaben:    'Aufgabe',
+    helfer:      'Helfer'
+};
+
+async function onLogToggle(el) {
+    if (!el.open || !logDirty) return;
+    logDirty = false;
+
+    const { data, error } = await db.from('change_log')
+        .select('*')
+        .order('zeitstempel', { ascending: false })
+        .limit(100);
+
+    const c = document.getElementById('log-content');
+
+    if (error || !data || data.length === 0) {
+        c.innerHTML = '<p style="text-align:center;color:var(--gray);padding:1rem;font-size:0.82rem">Noch keine Einträge im Protokoll.</p>';
+        return;
+    }
+
+    const rows = data.map(r => {
+        const dt  = new Date(r.zeitstempel);
+        const dts = dt.toLocaleDateString('de-DE',  { day:'2-digit', month:'2-digit', year:'2-digit' });
+        const ts  = dt.toLocaleTimeString('de-DE',  { hour:'2-digit', minute:'2-digit' });
+        const act = r.aktion === 'loeschung' ? '🗑️ Gelöscht' : '✅ Eingetragen';
+        const who = r.aktion === 'loeschung' ? (r.alter_wert?.name || '–') : (r.neuer_wert?.name || '–');
+        return `<tr>
+            <td>${dts} ${ts}</td>
+            <td>${TABLE_LABELS[r.tabelle] || r.tabelle}</td>
+            <td>${act}</td>
+            <td>${esc(who)}</td>
+            <td>${esc(r.geaendert_von || '–')}</td>
+        </tr>`;
+    }).join('');
+
+    c.innerHTML = `<table class="log-table">
+        <thead><tr><th>Zeitpunkt</th><th>Liste</th><th>Aktion</th><th>Eintrag</th><th>Geändert von</th></tr></thead>
+        <tbody>${rows}</tbody>
+    </table>`;
+}
+
+// ────────────────────────────────────────────────────────────────
+//  HELPERS
+// ────────────────────────────────────────────────────────────────
+function esc(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// ────────────────────────────────────────────────────────────────
+//  HELFERLISTE
+// ────────────────────────────────────────────────────────────────
+async function loadHelfer() {
+    const c = document.getElementById('helfer-entries');
+
+    const { data: aufgaben, error } = await db
+        .from('aufgaben')
+        .select('*, helfer(id, name)')
+        .order('sortierung').order('created_at');
+
+    if (error) {
+        c.innerHTML = `<div class="empty-state"><span class="icon">⚠️</span>Fehler beim Laden.</div>`;
+        return;
+    }
+    if (!aufgaben || aufgaben.length === 0) {
+        c.innerHTML = `<div class="empty-state"><span class="icon">🏮</span>Noch keine Dienste eingetragen.<br><span style="font-size:0.78rem">Der Admin legt die Aufgaben an.</span></div>`;
+        return;
+    }
+
+    c.innerHTML = aufgaben.map(a => {
+        const helferListe = a.helfer || [];
+        const count = helferListe.length;
+        const max   = a.max_helfer;
+        const vergeben = !!a.vergeben;
+        const full  = vergeben || count >= max;
+        const pct   = Math.min(100, Math.round((count / max) * 100));
+
+        const chips = helferListe.map(h => `
+            <div class="helfer-chip">
+                ${esc(h.name)}
+                <button class="chip-del"
+                    data-id="${h.id}" data-name="${esc(h.name)}"
+                    onclick="deleteHelfer(this.dataset.id, this.dataset.name)"
+                    title="Entfernen">✕</button>
+            </div>`).join('');
+
+        return `<div class="helfer-card" id="aufgabe-${a.id}">
+            <div class="helfer-card-header">
+                <div class="helfer-card-info">
+                    <div class="helfer-card-title">${esc(a.titel)}${vergeben ? ' <span class="badge-vergeben">✓ bereits vergeben</span>' : ''}</div>
+                    ${a.beschreibung ? `<div class="helfer-card-desc">${esc(a.beschreibung)}</div>` : ''}
+                </div>
+            </div>
+            <div class="helfer-progress">
+                <div class="progress-bar-wrap">
+                    <div class="progress-bar-fill${full ? ' full' : ''}" style="width:${vergeben ? 100 : pct}%"></div>
+                </div>
+                <span>${vergeben ? max + '/' + max : count + '/' + max} Helfer</span>
+            </div>
+            ${chips ? `<div class="helfer-names">${chips}</div>` : ''}
+            <div class="helfer-card-footer">
+                <button class="btn-helfen"
+                    ${full ? 'disabled' : ''}
+                    data-id="${a.id}" data-titel="${esc(a.titel)}"
+                    onclick="openHelfen(this.dataset.id, this.dataset.titel)">
+                    ${vergeben ? '✓ Bereits vergeben' : full ? '✓ Besetzt' : '🙋 Ich helfe mit!'}
+                </button>
+                <button class="btn-aufgabe-del"
+                    data-id="${a.id}" data-titel="${esc(a.titel)}"
+                    onclick="deleteAufgabe(this.dataset.id, this.dataset.titel)">
+                    🗑️ Aufgabe
+                </button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function openHelfen(aufgabeId, titel) {
+    pendingHelfen = { aufgabeId, titel };
+    document.getElementById('helfen-modal-title').textContent = '🙋 ' + titel;
+    document.getElementById('helfen-modal-desc').textContent  = 'Wie heißt du?';
+    document.getElementById('helfen-name').value = '';
+    openModal('modal-helfen');
+    setTimeout(() => document.getElementById('helfen-name').focus(), 150);
+}
+
+async function confirmHelfen() {
+    if (!pendingHelfen) return;
+    const name = document.getElementById('helfen-name').value.trim();
+    if (!name) { showToast('Bitte Namen eingeben', true); return; }
+
+    const { data, error } = await db
+        .from('helfer')
+        .insert({ aufgabe_id: pendingHelfen.aufgabeId, name })
+        .select().single();
+
+    closeModal('modal-helfen');
+    if (error) { showToast('Fehler beim Eintragen', true); return; }
+
+    await db.from('change_log').insert({
+        tabelle: 'helfer', zeile_id: data.id,
+        aktion: 'eintrag', alter_wert: null, neuer_wert: data,
+        geaendert_von: name
+    });
+    logDirty = true;
+    showToast('✅ Eingetragen!');
+    pendingHelfen = null;
+    loadHelfer();
+}
+
+async function deleteHelfer(helferId, name) {
+    if (!isAdmin) return;
+    const by = prompt('Wer löscht diesen Eintrag?');
+    if (!by) return;
+
+    await db.from('change_log').insert({
+        tabelle: 'helfer', zeile_id: helferId,
+        aktion: 'loeschung', alter_wert: { name }, neuer_wert: null,
+        geaendert_von: by
+    });
+    await db.from('helfer').delete().eq('id', helferId);
+    logDirty = true;
+    showToast('Helfer entfernt');
+    loadHelfer();
+}
+
+async function submitAufgabe(ev) {
+    ev.preventDefault();
+    if (!isAdmin) return;
+    const titel        = document.getElementById('aufgabe-titel').value.trim();
+    const beschreibung = document.getElementById('aufgabe-desc').value.trim();
+    const max_helfer   = parseInt(document.getElementById('aufgabe-max').value);
+    const btn          = ev.target.querySelector('button');
+    btn.disabled       = true;
+
+    const { error } = await db.from('aufgaben').insert({ titel, beschreibung, max_helfer });
+    if (error) { showToast('Fehler beim Speichern', true); }
+    else {
+        showToast('✅ Aufgabe angelegt!');
+        ev.target.reset();
+        document.getElementById('aufgabe-max').value = '3';
+        loadHelfer();
+    }
+    btn.disabled = false;
+}
+
+async function deleteAufgabe(id, titel) {
+    if (!isAdmin) return;
+    if (!confirm(`Aufgabe "${titel}" wirklich löschen?\nAlle Helfer-Einträge werden ebenfalls gelöscht.`)) return;
+    await db.from('aufgaben').delete().eq('id', id);
+    logDirty = true;
+    showToast('Aufgabe gelöscht');
+    loadHelfer();
+}
+
+// ────────────────────────────────────────────────────────────────
+//  INIT
+// ────────────────────────────────────────────────────────────────
+if (CONFIGURED) loadHelfer();
+else document.getElementById('helfer-entries').innerHTML =
+    '<div class="empty-state"><span class="icon">⚙️</span>Supabase ist noch nicht konfiguriert (siehe SETUP.md).</div>';
+</script>
+</body>
+</html>
