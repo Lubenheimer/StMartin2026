@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS aufgaben (
 );
 ALTER TABLE aufgaben ADD COLUMN IF NOT EXISTS vergeben   BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE aufgaben ADD COLUMN IF NOT EXISTS sortierung INT NOT NULL DEFAULT 0;
+ALTER TABLE aufgaben ADD COLUMN IF NOT EXISTS treffpunkt TEXT;
 
 CREATE TABLE IF NOT EXISTS helfer (
     id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -58,16 +59,26 @@ CREATE POLICY "admin delete aufgaben" ON aufgaben FOR DELETE TO authenticated US
 CREATE POLICY "admin delete helfer"   ON helfer   FOR DELETE TO authenticated USING (true);
 
 -- Dienste nur vorbelegen, wenn die Tabelle noch leer ist
-INSERT INTO aufgaben (titel, beschreibung, max_helfer, vergeben, sortierung)
+INSERT INTO aufgaben (titel, beschreibung, max_helfer, vergeben, sortierung, treffpunkt)
 SELECT * FROM (VALUES
-    ('Ausschank',                          NULL,                   2, false, 10),
-    ('Würstchen',                          NULL,                   2, true,  20),
-    ('Verkauf Stangen, Martinsweck etc.',  NULL,                   3, false, 30),
-    ('Brötchen',                           'Vorarbeit: Schneiden', 2, false, 40),
-    ('Waffeln',                            NULL,                   2, false, 50),
-    ('Aufbau',                             NULL,                   2, false, 60),
-    ('Abbau',                              NULL,                   2, false, 70),
-    ('Hintransport',                       NULL,                   1, false, 80),
-    ('Rücktransport',                      NULL,                   1, false, 90)
-) AS v(titel, beschreibung, max_helfer, vergeben, sortierung)
+    ('Aufbau',                             NULL,                   2, false, 10, '16:00 Uhr'),
+    ('Hintransport',                       NULL,                   1, false, 20, '16:00 Uhr'),
+    ('Brötchen',                           'Vorarbeit: Schneiden', 2, false, 30, '16:00 Uhr'),
+    ('Ausschank',                          NULL,                   2, false, 40, '17:00 Uhr'),
+    ('Würstchen',                          NULL,                   2, true,  50, '17:00 Uhr'),
+    ('Verkauf Stangen, Martinsweck etc.',  NULL,                   3, false, 60, '17:00 Uhr'),
+    ('Waffeln',                            NULL,                   2, false, 70, '17:00 Uhr'),
+    ('Abbau',                              NULL,                   2, false, 80, 'ca. 19:00 Uhr'),
+    ('Rücktransport',                      NULL,                   1, false, 90, 'ca. 19:00 Uhr')
+) AS v(titel, beschreibung, max_helfer, vergeben, sortierung, treffpunkt)
 WHERE NOT EXISTS (SELECT 1 FROM aufgaben);
+
+-- Bereits vorhandene Dienste: Treffpunkt und Reihenfolge setzen (idempotent)
+UPDATE aufgaben a SET treffpunkt = v.t, sortierung = v.s
+FROM (VALUES
+    ('Aufbau','16:00 Uhr',10), ('Hintransport','16:00 Uhr',20), ('Brötchen','16:00 Uhr',30),
+    ('Ausschank','17:00 Uhr',40), ('Würstchen','17:00 Uhr',50),
+    ('Verkauf Stangen, Martinsweck etc.','17:00 Uhr',60), ('Waffeln','17:00 Uhr',70),
+    ('Abbau','ca. 19:00 Uhr',80), ('Rücktransport','ca. 19:00 Uhr',90)
+) AS v(titel, t, s)
+WHERE a.titel = v.titel;

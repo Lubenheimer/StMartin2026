@@ -11,6 +11,7 @@ CREATE TABLE aufgaben (
     max_helfer   INT NOT NULL DEFAULT 3,
     vergeben     BOOLEAN NOT NULL DEFAULT false,  -- true = bereits anderweitig vergeben, keine Anmeldung möglich
     sortierung   INT NOT NULL DEFAULT 0,
+    treffpunkt   TEXT,                            -- z.B. '16:00 Uhr'; gleiche Zeit = gleiche Gruppe
     created_at   TIMESTAMPTZ DEFAULT now()
 );
 
@@ -57,13 +58,13 @@ CREATE POLICY "admin delete helfer"   ON helfer   FOR DELETE TO authenticated US
 -- ────────────────────────────────────────────────────────────────
 --  Vorbelegte Dienste
 -- ────────────────────────────────────────────────────────────────
-INSERT INTO aufgaben (titel, beschreibung, max_helfer, vergeben, sortierung) VALUES
-    ('Ausschank',                          NULL,                       2, false, 10),
-    ('Würstchen',                          NULL,                       2, true,  20),
-    ('Verkauf Stangen, Martinsweck etc.',  NULL,                       3, false, 30),
-    ('Brötchen',                           'Vorarbeit: Schneiden',     2, false, 40),
-    ('Waffeln',                            NULL,                       2, false, 50),
-    ('Aufbau',                             NULL,                       2, false, 60),
-    ('Abbau',                              NULL,                       2, false, 70),
-    ('Hintransport',                       NULL,                       1, false, 80),
-    ('Rücktransport',                      NULL,                       1, false, 90);
+INSERT INTO aufgaben (titel, beschreibung, max_helfer, vergeben, sortierung, treffpunkt) VALUES
+    ('Aufbau',                             NULL,                   2, false, 10, '16:00 Uhr'),
+    ('Hintransport',                       NULL,                   1, false, 20, '16:00 Uhr'),
+    ('Brötchen',                           'Vorarbeit: Schneiden', 2, false, 30, '16:00 Uhr'),
+    ('Ausschank',                          NULL,                   2, false, 40, '17:00 Uhr'),
+    ('Würstchen',                          NULL,                   2, true,  50, '17:00 Uhr'),
+    ('Verkauf Stangen, Martinsweck etc.',  NULL,                   3, false, 60, '17:00 Uhr'),
+    ('Waffeln',                            NULL,                   2, false, 70, '17:00 Uhr'),
+    ('Abbau',                              NULL,                   2, false, 80, 'ca. 19:00 Uhr'),
+    ('Rücktransport',                      NULL,                   1, false, 90, 'ca. 19:00 Uhr');

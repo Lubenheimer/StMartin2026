@@ -132,14 +132,14 @@
         .btn-sm.off { background: var(--red); }
 
         /* ── HELFERLISTE ── */
-        #helfer-entries {
+        .helfer-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 0.6rem;
             align-items: stretch;
         }
         @media (min-width: 640px) {
-            #helfer-entries {
+            .helfer-grid {
                 grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
                 gap: 0.85rem;
             }
@@ -150,8 +150,16 @@
             .btn-helfen { font-size: 0.8rem; padding: 0.5rem 0.25rem; }
             .badge-vergeben { margin-left: 0; display: table; margin-top: 0.25rem; }
         }
-        #helfer-entries > .loading,
-        #helfer-entries > .empty-state { grid-column: 1 / -1; }
+        .helfer-group { margin-bottom: 1.4rem; }
+        .helfer-group-title {
+            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 1rem; font-weight: 800; color: var(--amber-dark);
+            margin: 0 0 0.6rem;
+        }
+        .helfer-group-title .time {
+            background: var(--gold); color: #3b2c00;
+            padding: 0.15rem 0.7rem; border-radius: 20px; font-size: 0.85rem;
+        }
         .helfer-card {
             display: flex; flex-direction: column;
             background: #fff;
@@ -330,6 +338,10 @@
             <div class="form-group">
                 <label for="aufgabe-desc">Beschreibung (optional)</label>
                 <input type="text" id="aufgabe-desc" placeholder="z.B. Samstag 14:00 Uhr vor Ort">
+            </div>
+            <div class="form-group">
+                <label for="aufgabe-treff">Treffpunkt (optional, gleiche Zeit = gleiche Gruppe)</label>
+                <input type="text" id="aufgabe-treff" placeholder="z.B. 16:00 Uhr">
             </div>
             <div class="form-group">
                 <label for="aufgabe-max">Max. Helfer *</label>
@@ -553,7 +565,7 @@ async function loadHelfer() {
         return;
     }
 
-    c.innerHTML = aufgaben.map(a => {
+    const renderCard = a => {
         const helferListe = a.helfer || [];
         const count = helferListe.length;
         const max   = a.max_helfer;
@@ -598,7 +610,22 @@ async function loadHelfer() {
                 </button>
             </div>
         </div>`;
-    }).join('');
+    };
+
+    const groups = new Map();
+    aufgaben.forEach(a => {
+        const key = a.treffpunkt || '';
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(a);
+    });
+    c.innerHTML = [...groups.entries()].map(([zeit, liste]) => `
+        <div class="helfer-group">
+            <div class="helfer-group-title">${zeit
+                ? `🕓 Treffpunkt <span class="time">${esc(zeit)}</span>`
+                : (groups.size > 1 ? 'Weitere Dienste' : '')}</div>
+            <div class="helfer-grid">${liste.map(renderCard).join('')}</div>
+        </div>`).join('');
+
 }
 
 function openHelfen(aufgabeId, titel) {
@@ -655,10 +682,11 @@ async function submitAufgabe(ev) {
     const titel        = document.getElementById('aufgabe-titel').value.trim();
     const beschreibung = document.getElementById('aufgabe-desc').value.trim();
     const max_helfer   = parseInt(document.getElementById('aufgabe-max').value);
+    const treffpunkt   = document.getElementById('aufgabe-treff').value.trim() || null;
     const btn          = ev.target.querySelector('button');
     btn.disabled       = true;
 
-    const { error } = await db.from('aufgaben').insert({ titel, beschreibung, max_helfer });
+    const { error } = await db.from('aufgaben').insert({ titel, beschreibung, max_helfer, treffpunkt, sortierung: 100 });
     if (error) { showToast('Fehler beim Speichern', true); }
     else {
         showToast('✅ Aufgabe angelegt!');
